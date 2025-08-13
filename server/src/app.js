@@ -1,7 +1,8 @@
 import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-
+import { errorHandler } from "./middlewares/errorHandler.middleware.js";
+import { notFoundHandler } from "./middlewares/notFound.middleware.js";
 const app = express();
 app.use(
   cors({
@@ -14,3 +15,10 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(express.static("public"));
 export { app };
+
+import userRoute from "./routes/user.routes.js";
+
+app.use("/api/v1", userRoute);
+
+app.use(errorHandler);
+app.use(notFoundHandler);

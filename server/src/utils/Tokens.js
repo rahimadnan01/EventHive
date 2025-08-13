@@ -11,14 +11,14 @@ const generateAccessAndRefreshToken = async (userId) => {
     if (!accessToken) {
       throw new ApiError(
         500,
-        "Something went wrong while generatig the access Token"
+        "Something went wrong while generating the access Token"
       );
     }
     const refreshToken = user.generateRefreshToken();
     if (!refreshToken) {
       throw new ApiError(
         500,
-        "Something went wrong while generatig the refresh Token"
+        "Something went wrong while generating the refresh Token"
       );
     }
 

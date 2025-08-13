@@ -19,10 +19,13 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["superAdmin", "admin", "user"],
+      enum: ["admin", "user"],
       default: "user",
     },
     profilePic: {
+      type: String,
+    },
+    refreshToken: {
       type: String,
     },
     eventsJoined: [
