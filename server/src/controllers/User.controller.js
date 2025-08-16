@@ -3,7 +3,7 @@ import { wrapAsync } from "../utils/wrapAsync.js";
 import { ApiError } from "../utils/ApiError.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { generateAccessAndRefreshToken } from "../utils/Tokens.js";
-
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 export const registerUser = wrapAsync(async (req, res) => {
   const { username, email, password } = req.body;
   if ((!email, !password, !email)) {
@@ -81,6 +81,7 @@ export const loginUser = wrapAsync(async (req, res) => {
       })
     );
 });
+
 export const logoutUser = wrapAsync(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user?._id,
@@ -102,6 +103,7 @@ export const logoutUser = wrapAsync(async (req, res) => {
     .clearCookie("accessToken", options)
     .json(new ApiResponse(200, "User loggedOut successfully"));
 });
+
 export const getSingleUser = wrapAsync(async (req, res) => {
   const { userId } = req.params;
   if (!userId) {
@@ -114,4 +116,79 @@ export const getSingleUser = wrapAsync(async (req, res) => {
   }
 
   res.status(200).json(new ApiResponse(200, "User shown successfully", user));
+});
+
+export const getAllUsers = wrapAsync(async (req, res) => {
+  const allUsers = await User.find({});
+  if (!allUsers) {
+    throw new ApiError(500, "No Users found");
+  }
+  res
+    .status(200)
+    .json(new ApiResponse(200, "All users fetched successfully", allUsers));
+});
+
+export const deleteSingleUser = wrapAsync(async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    throw new ApiError(400, "Id not given to delete User");
+  }
+  const deletedUser = await User.findByIdAndDelete(userId);
+  if (!deletedUser) {
+    throw new ApiError(500, "Failed to delete User");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "User deleted successfully", deletedUser));
+});
+
+export const deleteAllUsers = wrapAsync(async (req, res) => {
+  const deletedUsers = await User.deleteMany({});
+  if (deletedUsers.deletedCount == 0) {
+    throw new ApiError(404, "No users found to delete");
+  }
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Users deleted Successfully", deletedUsers));
+});
+
+export const updateUser = wrapAsync(async (req, res) => {
+  const { username, email, password } = req.body;
+
+  const existedUser = await User.findOne({ email: email });
+  if (existedUser) {
+    throw new ApiError(409, "User already existed Of this email");
+  }
+  const { userId } = req.params;
+  const profilePicPath = req.files?.profilePic[0]?.path;
+  if (!profilePicPath) {
+    throw new ApiError(400, "Path for profile pic is required");
+  }
+  let profilePic = await uploadOnCloudinary(profilePicPath);
+  if (!profilePic.url) {
+    throw new ApiError(500, "Failed to upload an image");
+  }
+  if (!userId) {
+    throw new ApiError(400, "User Id is required to update User");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "user not found");
+  }
+
+  if (username) user.username = username;
+  if (email) user.email = email;
+  if (password) user.password = password;
+  if (profilePic.url) user.profilePic = profilePic.url;
+
+  const updatedUser = await user.save();
+  if (!updatedUser) {
+    throw new ApiError(500, "Failed to upload User");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "User uploaded Successfully", updatedUser));
 });
