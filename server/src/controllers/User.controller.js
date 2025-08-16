@@ -102,3 +102,16 @@ export const logoutUser = wrapAsync(async (req, res) => {
     .clearCookie("accessToken", options)
     .json(new ApiResponse(200, "User loggedOut successfully"));
 });
+export const getSingleUser = wrapAsync(async (req, res) => {
+  const { userId } = req.params;
+  if (!userId) {
+    throw new ApiError(400, "User Id not Given");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User not Found of this Id");
+  }
+
+  res.status(200).json(new ApiResponse(200, "User shown successfully", user));
+});
