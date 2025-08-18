@@ -17,7 +17,9 @@ app.use(express.static("public"));
 export { app };
 
 import userRoute from "./routes/user.routes.js";
+import adminRoute from "./routes/admin.routes.js";
 
+app.use("/api/v1", adminRoute);
 app.use("/api/v1", userRoute);
 
 app.use(errorHandler);
