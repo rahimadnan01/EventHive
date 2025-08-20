@@ -1,6 +1,10 @@
 import Router from "express";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
-import { addEvent } from "../controllers/Event.controller.js";
+import {
+  addEvent,
+  getAllEvents,
+  getSingleEvent,
+} from "../controllers/Event.controller.js";
 import { upload } from "../middlewares/multer.middelware.js";
 const router = Router();
 router.route("/events/create").post(
@@ -13,4 +17,6 @@ router.route("/events/create").post(
   ]),
   addEvent
 );
+router.route("/events/:eventId").get(getSingleEvent);
+router.route("/events").get(getAllEvents);
 export default router;

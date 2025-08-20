@@ -72,4 +72,24 @@ export const addEvent = wrapAsync(async (req, res) => {
     .json(new ApiResponse(200, "Event created successfully", event));
 });
 
-export const getSingleEvent = wrapAsync(async (req, res) => {});
+export const getSingleEvent = wrapAsync(async (req, res) => {
+  const { eventId } = req.params;
+  if (!eventId) {
+    throw new ApiError(400, "Event ID not given");
+  }
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new ApiError(404, "No Event found");
+  }
+  res.status(200).json(new ApiResponse(200, "Event shown successfully", event));
+});
+
+export const getAllEvents = wrapAsync(async (req, res) => {
+  const allEvents = await Event.find({});
+  if (!allEvents) {
+    throw new ApiError(404, "No Events found");
+  }
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Shown All Events successfully", allEvents));
+});
