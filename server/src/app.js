@@ -18,9 +18,10 @@ export { app };
 
 import userRoute from "./routes/user.routes.js";
 import adminRoute from "./routes/admin.routes.js";
-
+import eventRoute from "./routes/event.routes.js";
 app.use("/api/v1", adminRoute);
 app.use("/api/v1", userRoute);
+app.use("/api/v1", eventRoute);
 
 app.use(errorHandler);
 app.use(notFoundHandler);

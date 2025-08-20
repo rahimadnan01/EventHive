@@ -110,4 +110,3 @@ export const logoutAdmin = wrapAsync(async (req, res) => {
     .clearCookie("accessToken", options)
     .json(new ApiResponse(200, "User loggedOut successfully"));
 });
-
