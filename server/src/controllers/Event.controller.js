@@ -93,3 +93,63 @@ export const getAllEvents = wrapAsync(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "Shown All Events successfully", allEvents));
 });
+
+export const deleteSingleEvent = wrapAsync(async (req, res) => {
+  const { eventId } = req.params;
+
+  const userId = req.user._id;
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(401, "User is unauthorized");
+  }
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new ApiError(500, "Something went wrong while fetching the event");
+  }
+
+  if (
+    user.role !== "admin" &&
+    user._id.toString() !== event.createdBy.toString()
+  ) {
+    throw new ApiError(
+      403,
+      "Access Denied only Owner of this event can delete or update event"
+    );
+  }
+  if (!eventId) {
+    throw new ApiError(400, "Event ID is required to delete Event");
+  }
+  const deletedEvent = await Event.findByIdAndDelete(eventId);
+  if (!deletedEvent) {
+    throw new ApiError(500, "Something went wrong while deleting the Event ");
+  }
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Event deleted successfully", deletedEvent));
+});
+
+export const deleteAllEvents = wrapAsync(async (req, res) => {
+  const userId = req.user._id;
+  if (!userId) {
+    throw new ApiError(401, "User is unauthorized");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "No such user Found");
+  }
+
+  if (user && user.role !== "admin") {
+    throw new ApiError(403, "access Denied only Admin can delete all Events");
+  }
+
+  const deletedEvents = await Event.deleteMany({});
+  if (deletedEvents.deletedCount <= 0) {
+    throw new ApiError(404, "NO Events found to delete");
+  }
+  res
+    .status(200)
+    .json(
+      new ApiResponse(200, "All Events deleted successfully", deletedEvents)
+    );
+});

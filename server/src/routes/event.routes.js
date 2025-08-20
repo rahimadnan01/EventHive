@@ -2,6 +2,8 @@ import Router from "express";
 import { verifyJwt } from "../middlewares/auth.middleware.js";
 import {
   addEvent,
+  deleteAllEvents,
+  deleteSingleEvent,
   getAllEvents,
   getSingleEvent,
 } from "../controllers/Event.controller.js";
@@ -17,6 +19,12 @@ router.route("/events/create").post(
   ]),
   addEvent
 );
-router.route("/events/:eventId").get(getSingleEvent);
-router.route("/events").get(getAllEvents);
+router
+  .route("/events/:eventId")
+  .get(getSingleEvent)
+  .delete(verifyJwt(), deleteSingleEvent);
+router
+  .route("/events")
+  .get(getAllEvents)
+  .delete(verifyJwt("admin"), deleteAllEvents);
 export default router;
