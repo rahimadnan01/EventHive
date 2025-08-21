@@ -153,3 +153,111 @@ export const deleteAllEvents = wrapAsync(async (req, res) => {
       new ApiResponse(200, "All Events deleted successfully", deletedEvents)
     );
 });
+
+export const bookEvent = wrapAsync(async (req, res) => {
+  const { eventId } = req.params;
+  if (!eventId) {
+    throw new ApiError(400, "Event Id is required");
+  }
+  const userId = req.user._id;
+  if (!userId) {
+    throw new ApiError(400, "User Id is required");
+  }
+
+  const user = await User.findById(userId);
+  if (!user) {
+    throw new ApiError(404, "User Not Found");
+  }
+
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new ApiError(404, "Event Not Found");
+  }
+
+  if (user && event) {
+    user.eventsJoined = event._id;
+    event.participants = user._id;
+  }
+
+  let updatedUser = await user.save({ validateBeforeSave: false });
+  if (!updatedUser) {
+    throw new ApiError(500, "Failed to update User");
+  }
+  let updatedEvent = await event.save({ validateBeforeSave: false });
+  if (!updatedEvent) {
+    throw new ApiError(500, "Failed to Book Event");
+  }
+
+  res.status(200).json(
+    new ApiResponse(200, "Event Booked successfully", {
+      updatedUser: updatedUser,
+      updatedEvent: updatedEvent,
+    })
+  );
+});
+
+export const updateEvent = wrapAsync(async (req, res) => {
+  const {
+    type,
+    name,
+    location,
+    description,
+    contact,
+    startDate,
+    endDate,
+    startTime,
+    endTime,
+  } = req.body;
+
+  const eventPhotoPath = req.files?.photo[0]?.path;
+
+  let eventPhoto = await uploadOnCloudinary(eventPhotoPath);
+
+  if (eventPhotoPath && !eventPhoto) {
+    throw new ApiError(500, "Failed to upload photo");
+  }
+
+  const { eventId } = req.params;
+  if (!eventId) {
+    throw new ApiError(400, "Event ID is required");
+  }
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new ApiError(500, "Something went wrong while fetching the Event");
+  }
+
+  const user = await User.findById(req.user?._id);
+  if (!user) {
+    throw new ApiError(404, "No such user Found");
+  }
+
+  if (
+    user.role !== "admin" &&
+    user._id.toString() !== event.createdBy.toString()
+  ) {
+    throw new ApiError(
+      403,
+      "Access Denied only Owner of this event can  update event"
+    );
+  }
+
+  if (type) event.type = type;
+  if (name) event.name = name;
+  if (location) event.location = location;
+  if (contact) event.contact = contact;
+  if (description) event.description = description;
+  if (startDate) event.startDate = startDate;
+  if (endDate) event.endDate = endDate;
+  if (startTime) event.startTime = startTime;
+  if (endTime) event.endTime = endTime;
+  if (eventPhoto?.url) event.photo = eventPhoto.url;
+
+  let updatedEvent = await event.save();
+  if (!updatedEvent) {
+    throw new ApiError(500, "Failed to update an Event");
+  }
+
+  res
+    .status(200)
+    .json(new ApiResponse(200, "Event updated successfully", updatedEvent));
+});
