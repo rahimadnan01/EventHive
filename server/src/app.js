@@ -22,6 +22,9 @@ import eventRoute from "./routes/event.routes.js";
 app.use("/api/v1", adminRoute);
 app.use("/api/v1", userRoute);
 app.use("/api/v1", eventRoute);
+app.get("/", (req, res) => {
+  res.send("✅ EventHive API is running");
+});
 
 app.use(errorHandler);
 app.use(notFoundHandler);
