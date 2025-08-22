@@ -6,6 +6,7 @@ import {
   deleteAllEvents,
   deleteSingleEvent,
   getAllEvents,
+  getEventWithParticipants,
   getSingleEvent,
   updateEvent,
 } from "../controllers/Event.controller.js";
@@ -40,4 +41,8 @@ router
   .route("/events")
   .get(getAllEvents)
   .delete(verifyJwt("admin"), deleteAllEvents);
+
+router
+  .route("/events/:eventId/participants")
+  .get(verifyJwt(), getEventWithParticipants);
 export default router;

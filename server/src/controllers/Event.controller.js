@@ -261,3 +261,68 @@ export const updateEvent = wrapAsync(async (req, res) => {
     .status(200)
     .json(new ApiResponse(200, "Event updated successfully", updatedEvent));
 });
+
+export const getEventWithParticipants = wrapAsync(async (req, res) => {
+  const { eventId } = req.params;
+  if (!eventId) {
+    throw new ApiError(400, "Event Id is required");
+  }
+
+  const event = await Event.findById(eventId);
+  if (!event) {
+    throw new ApiError(404, "Event Not found");
+  }
+
+  const user = await User.findById(req.user._id);
+  if (!user) {
+    throw new ApiError(401, "User is unauthorized");
+  }
+
+  if (
+    user.role !== "admin" &&
+    user._id.toString() !== event.createdBy.toString()
+  ) {
+    throw new ApiError(
+      403,
+      "Access Denied only Owner of this event can  update event"
+    );
+  }
+
+  const eventWithParticipants = await Event.aggregate([
+    {
+      $lookup: {
+        from: "users",
+        localField: "participants",
+        foreignField: "_id",
+        as: "participantsInfo",
+      },
+    },
+    {
+      $addFields: {
+        participantsInfo: {
+          $map: {
+            input: "$participantsInfo",
+            as: "p",
+            in: {
+              _id: "$$p._id",
+              username: "$$p.username",
+              email: "$$p.email",
+            },
+          },
+        },
+      },
+    },
+  ]);
+
+  res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        "Event with participants shown successfully",
+        eventWithParticipants
+      )
+    );
+});
+
+
